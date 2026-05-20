@@ -1029,26 +1029,21 @@ def maximize_window(window):
 #cap = cv2.VideoCapture(PATH_VIDEO)          #0, cv2.CAP_DSHOW
 import platform
 if platform.system() == 'Windows':
-    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(2, cv2.CAP_DSHOW)
 else:  # Linux/Mac
-    cap = cv2.VideoCapture(1)  # atau cv2.CAP_V4L2
+    cap = cv2.VideoCapture(2)  # atau cv2.CAP_V4L2
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)      #1280   640
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)     #720    480
 
-# cap = cv2.flip(cap, 1)
-# while True
-#     ret, cap = cap.read()
-#     if not ret:
-#         break
+if platform.system() == 'Windows':
+    capface = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+else:  # Linux/Mac
+    capface = cv2.VideoCapture(0)  # atau cv2.CAP_V4L2
 
-#     # flip horizontal
-#     cap = cv2.flip(cap, 1)
+capface.set(cv2.CAP_PROP_FRAME_WIDTH, 640)      #1280   640
+capface.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)     #720    480
 
-#     cv2.imshow("camera", cap)
-
-#     if(cv2.waitKey(1) & 0xFF == ord('q'))
-#         break
 print(">>> Start Test ...")
 
 class TextFrame(customtkinter.CTkFrame):
@@ -1366,7 +1361,9 @@ class TimeIn(customtkinter.CTk):
         self.left_side.grid_columnconfigure(1, weight=1)  # Block design column
         
         if not HIDE_CAMERA:
-            self.content_container.grid_columnconfigure(1, weight=3)  # Camera column (3x wider than block design)
+            self.content_container.grid_columnconfigure(0, weight=2)  # Camera column (3x wider than block design)
+            self.content_container.grid_columnconfigure(1, weight=3)  # Camera 1
+            self.content_container.grid_columnconfigure(2, weight=3)  # Camera 2
         else:
             # When camera is hidden, make both columns equal weight for centering
             self.content_container.grid_columnconfigure(0, weight=1)
@@ -1384,6 +1381,7 @@ class TimeIn(customtkinter.CTk):
 
         # Only create camera section if HIDE_CAMERA is False
         if not HIDE_CAMERA:
+            # Kamera 1 - Upper Table Cam
             camera_padx = 10 if DISPLAY_HALF else 20
             camera_pady = (40, 10) if DISPLAY_HALF else (50, 20)
             
@@ -1391,12 +1389,24 @@ class TimeIn(customtkinter.CTk):
             self.video_frame_0.grid(row=0, column=1, padx=camera_padx, pady=0, sticky="nsew")
             
             self.video_frame_1 = ImageFrame(self.content_container, "")
-            self.video_frame_1.grid(row=0, column=1, padx=camera_padx, pady=camera_pady, sticky="nsew")
+            self.video_frame_1.grid(row=0, column=1, padx=camera_padx, pady=camera_pady, sticky="nsew") # pady = camera_pady column = 1
             self.video_frame_1.grid_propagate(False)
+
+            # Kamera 2 - Face Camera
+            self.video_frame_2 = TextFrame(self.content_container, "Face Camera")
+            self.video_frame_2.grid(row=0, column=2, padx=camera_padx, pady=0, sticky="nsew")
+
+            self.video_frame_3 = ImageFrame(self.content_container, "")
+            self.video_frame_3.grid(row=0, column=2, padx=camera_padx, pady=camera_pady, sticky="nsew")
+            self.video_frame_3.grid_propagate(False)
+            self.video_frame_3.grid_rowconfigure(0, weight=1)
+            self.video_frame_3.grid_columnconfigure(0, weight=1)
         else:
             # Camera hidden - set to None
             self.video_frame_0 = None
             self.video_frame_1 = None
+            self.video_frame_2 = None
+            self.video_frame_3 = None
             print(">>> HIDE_CAMERA enabled - Camera section hidden")
         
         # Adjust image sizes to fit the frames
@@ -1426,9 +1436,14 @@ class TimeIn(customtkinter.CTk):
             # Create camera label with grid
             self.camera = customtkinter.CTkLabel(self.video_frame_1, text="", anchor="center")
             self.camera.grid(row=0, column=0, sticky="nsew")
+
+            # Label kamera 2
+            self.camera2 = customtkinter.CTkLabel(self.video_frame_3, text="", anchor="center")
+            self.camera2.grid(row=0, column=0, sticky="nsew")
         else:
             # Camera hidden - set to None
             self.camera = None
+            self.camera2 = None
 
         # Add the start button
         button_font_size = 30 if DISPLAY_HALF else 36
@@ -1583,9 +1598,7 @@ class TimeIn(customtkinter.CTk):
                 print(f"Error loading {variant}: {e}")
                 return None
 
-
     def end_test(self):
-        rec = TimeIn
         global current_player_index, total_players, game_mode
         self.current_question = 9
         self.reset_timer()
@@ -2138,7 +2151,7 @@ END $$;
         self.reset_timer()
         self.start_timer()
 
-    #def button_1_callback(self):
+        #def button_1_callback(self):
 
         #os.execl(sys.executable, os.path.
         # abspath(__file__), *sys.argv)
@@ -3192,7 +3205,7 @@ END $$;
         if not HIDE_CAMERA and self.camera is not None:
             # Convert frame to ImageTk format
             # img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            img = Image.fromarray(frame)
+            img1 = Image.fromarray(frame)
             
             # Calculate aspect ratio
             frame_height, frame_width = frame.shape[:2]
@@ -3202,18 +3215,47 @@ END $$;
             # Calculate scaling factor while maintaining aspect ratio
             width_ratio = container_width / frame_width
             height_ratio = container_height / frame_height
-            scale = min(width_ratio, height_ratio)
+            # scale = min(width_ratio, height_ratio)
             scale = min(width_ratio, height_ratio) * 3
+            print(f"Scale: {scale}")
+
             
             # Resize image if needed
-            if scale < 1:
-                new_width = int(frame_width * scale)
-                new_height = int(frame_height * scale)
-                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            # if scale > 2:
+            #     new_width = int(frame_width * scale)
+            #     new_height = int(frame_height * scale)
+            #     img1 = img1.resize((new_width, new_height), Image.Resampling.LANCZOS)
             
-            ImgTks = ImageTk.PhotoImage(image=img)
-            self.camera.imgtk = ImgTks
-            self.camera.configure(image=ImgTks)
+            new_width = int(frame_width * scale)
+            new_height = int(frame_height * scale)
+            img1 = img1.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            ImgTks1 = ImageTk.PhotoImage(image=img1)
+            self.camera.imgtk = ImgTks1
+            self.camera.configure(image=ImgTks1)
+
+             # ---- Kamera 2 (capface) ----
+            if self.camera2 is not None:
+                ret2, frame2 = capface.read()
+                if ret2:
+                    frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2RGB)
+                    img2 = Image.fromarray(frame2)
+
+                    f2_height, f2_width = frame2.shape[:2]
+                    c2_width  = self.video_frame_3.winfo_width()
+                    c2_height = self.video_frame_3.winfo_height()
+
+                    w2_ratio = c2_width  / f2_width  
+                    h2_ratio = c2_height / f2_height 
+                    scale2 = min(w2_ratio, h2_ratio)
+
+                    # new_w2 = max(1, int(f2_width  * scale2))
+                    # new_h2 = max(1, int(f2_height * scale2))
+                    # img2 = img2.resize((new_w2, new_h2), Image.Resampling.LANCZOS)
+
+                    ImgTks2 = ImageTk.PhotoImage(image=img2)
+                    self.camera2.imgtk = ImgTks2
+                    self.camera2.configure(image=ImgTks2)
         
         # FPS monitoring
         self.fps_counter += 1
