@@ -1,0 +1,8 @@
+.env
+venv/
+__pycache__/
+*.pyc
+testing_tts.py
+TTS_TEST/
+agents.md
+*.log
