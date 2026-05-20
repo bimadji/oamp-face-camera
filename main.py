@@ -1385,6 +1385,9 @@ class TimeIn(customtkinter.CTk):
             self.video_frame_1 = ImageFrame(self.content_container, "")
             self.video_frame_1.grid(row=0, column=1, padx=camera_padx, pady=camera_pady, sticky="nsew") # pady = camera_pady column = 1
             self.video_frame_1.grid_propagate(False)
+            self.video_frame_1.grid_rowconfigure(0, weight=1)
+            self.video_frame_1.grid_columnconfigure(0, weight=1)
+
 
             # Kamera 2 - Face Camera
             self.video_frame_2 = TextFrame(self.content_container, "Face Camera")
@@ -3122,7 +3125,7 @@ END $$;
             height_ratio = container_height / frame_height
             # scale = min(width_ratio, height_ratio)
             scale = min(width_ratio, height_ratio) * 3
-            print(f"Scale: {scale}")
+            # print(f"Scale: {scale}")
 
             
             # Resize image if needed
