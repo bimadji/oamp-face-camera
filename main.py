@@ -1029,9 +1029,9 @@ def maximize_window(window):
 #cap = cv2.VideoCapture(PATH_VIDEO)          #0, cv2.CAP_DSHOW
 import platform
 if platform.system() == 'Windows':
-    cap = cv2.VideoCapture(2, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 else:  # Linux/Mac
-    cap = cv2.VideoCapture(2)  # atau cv2.CAP_V4L2
+    cap = cv2.VideoCapture(1)  # atau cv2.CAP_V4L2
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)      #1280   640
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)     #720    480
@@ -2099,7 +2099,7 @@ END $$;
 
                     self.writers[i].write(frame)
 
-                    cv2.imshow(f"Camera {i}", frame)
+                    # cv2.imshow(f"Camera {i}", frame)
 
             time.sleep(0.01)
 
