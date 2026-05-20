@@ -2077,6 +2077,9 @@ END $$;
                 (width, height)
             )
 
+            print(width, height)
+            print(writer.isOpened())
+
             self.cameras.append(cap)
             self.writers.append(writer)
 
@@ -2085,7 +2088,8 @@ END $$;
 
         self.recording = True
 
-        threading.Thread(target=self.record_video).start()
+        self.record_thread = threading.Thread(target=self.record_video)
+        self.record_thread.start()
 
     # proses recording
     def record_video(self):
@@ -2111,7 +2115,8 @@ END $$;
 
         self.recording = False
 
-        time.sleep(1)
+        if hasattr(self, 'record_thread'):
+            self.record_thread.join()
 
         for cap in self.cameras:
             cap.release()
