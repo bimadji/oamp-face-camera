@@ -1249,6 +1249,12 @@ class TimeIn(customtkinter.CTk):
         log_exception("Tk callback exception (TimeIn)", exc, val, tb)
 
     def __init__(self):
+        self.recording = False
+        self.video_writer = None
+        self.capture = None
+
+        self.cameras = []
+        self.writers = []
 
         super().__init__()
         global current_player_index, total_players
@@ -1600,6 +1606,7 @@ class TimeIn(customtkinter.CTk):
         self.current_question = 9
         self.reset_timer()
         self.stop_timer()
+        self.stop_recording()
         self.current_level_button.grid_remove()
         self.timer_task_avg = format(float(sum(self.timer_task_all) / len(self.timer_task_all)), ".3f")
         cognitive_age_avg = int(sum(self.cognitive_age_list) / len(self.cognitive_age_list))
@@ -2033,8 +2040,92 @@ END $$;
         variants = ['a', 'b', 'c', 'd']
         return f"{level}{random.choice(variants)}"
 
-    # Fungsi untuk memulai game
+    # start record
+    def start_recording(self):
+
+        now = datetime.now()
+
+        folder = r"C:\Users\User\Desktop\OAMP\record"
+
+        os.makedirs(folder, exist_ok=True)
+
+        # =========================
+        # Buka 3 kamera
+        # =========================
+        for i in range(3):
+
+            cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
+
+            if not cap.isOpened():
+                print(f"Kamera {i} gagal dibuka")
+                continue
+
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+
+            filename = os.path.join(
+                folder,
+                now.strftime(f"camera_{i}_%Y-%m-%d_%H-%M-%S.mp4")
+            )
+
+            writer = cv2.VideoWriter(
+                filename,
+                fourcc,
+                20.0,
+                (width, height)
+            )
+
+            self.cameras.append(cap)
+            self.writers.append(writer)
+
+            print(f"Kamera {i} recording")
+            print(filename)
+
+        self.recording = True
+
+        threading.Thread(target=self.record_video).start()
+
+    # proses recording
+    def record_video(self):
+
+        while self.recording:
+
+            for i, cap in enumerate(self.cameras):
+
+                ret, frame = cap.read()
+
+                if ret:
+
+                    frame = cv2.flip(frame, 1)
+
+                    self.writers[i].write(frame)
+
+                    cv2.imshow(f"Camera {i}", frame)
+
+            time.sleep(0.01)
+
+    # end recording
+    def stop_recording(self):
+
+        self.recording = False
+
+        time.sleep(1)
+
+        for cap in self.cameras:
+            cap.release()
+
+        for writer in self.writers:
+            writer.release()
+
+        cv2.destroyAllWindows()
+
+        print("Video berhasil disimpan")
+            
+    # Fungsi untuk memulai game / play game
     def button_0_callback(self):
+        # rec = TimeIn()
 
         # Hide the start button
         self.button_0.grid_remove()
@@ -2055,14 +2146,18 @@ END $$;
         
         self.start_task = time.time()
         self.streaming()
+        # if(self.streaming()):
+        #     print("Camera sedang direcord")
 
+        self.start_recording()
         # Reset and start the timer
         self.reset_timer()
         self.start_timer()
 
-    #def button_1_callback(self):
+        #def button_1_callback(self):
 
-        #os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+        #os.execl(sys.executable, os.path.
+        # abspath(__file__), *sys.argv)
         #sys.exit() 
 
 
@@ -3217,7 +3312,7 @@ if __name__ == "__main__":
         current_player_index = 1
         if launch_player_input_window():
             app = TimeIn()
-            # app.streaming()
+            #app.streaming()
             app.after(0, lambda: maximize_window(app))
             app.mainloop()
         else:
