@@ -2045,7 +2045,7 @@ END $$;
 
         now = datetime.now()
 
-        folder = r"C:\Users\User\Desktop\OAMP\record"
+        folder = r"C:\\Users\\ASUS NUC\\Desktop\\OAMP\\record"
 
         os.makedirs(folder, exist_ok=True)
 
